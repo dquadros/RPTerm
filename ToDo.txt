@@ -1,0 +1,9 @@
+[x] Use standard SDK
+[x] Include serial port suport
+[x] Include basic terminal emulation
+[x] Include keyboard support
+[ ] Refactor basic terminal emulation
+[ ] Add extra serial commands (BEL, color, etc)
+[ ] Add cursor key support
+[ ] Optimize scrolling
+[ ] Local Configuration
