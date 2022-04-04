@@ -24,8 +24,8 @@
 extern u8 TextBuf[TEXTSIZE];
 
 // Screen dimensions
-#define COLUMNS     80
-#define ROWS        60
+#define COLUMNS     TEXTW
+#define ROWS        TEXTH
 
 // ASCII chars
 #define SPC         0x20

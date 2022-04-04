@@ -21,17 +21,17 @@
 
 #include "include.h"
 
-// text screen (character + foreground color, format GF_ATEXT)
+// text screen (character code + backgound coler + foreground color, format GF_ATEXT)
 u8 TextBuf[TEXTSIZE] __attribute__ ((aligned(4)));
 
 // copy of font
-static u8 Font_Copy[sizeof(FontBold8x8)] __attribute__ ((aligned(4)));
+static u8 Font_Copy[sizeof(FONT)] __attribute__ ((aligned(4)));
 
 // initialize video
 static void VideoInit()
 {
 	// copy font to RAM buffer
-	memcpy(Font_Copy, FontBold8x8, sizeof(FontBold8x8));
+	memcpy(Font_Copy, FONT, sizeof(FONT));
 
 	// run VGA core
 	multicore_launch_core1(VgaCore);

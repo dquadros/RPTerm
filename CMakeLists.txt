@@ -79,6 +79,7 @@ add_executable(picovgatest
                ${CMAKE_CURRENT_LIST_DIR}/_picovga/util/pwmsnd.cpp
                ${CMAKE_CURRENT_LIST_DIR}/_picovga/font/font_bold_8x8.cpp
                ${CMAKE_CURRENT_LIST_DIR}/_picovga/font/font_bold_8x14.cpp
+               ${CMAKE_CURRENT_LIST_DIR}/_picovga/font/font_bold_8x16.cpp
                ${CMAKE_CURRENT_LIST_DIR}/_picovga/font/font_boldB_8x14.cpp
                ${CMAKE_CURRENT_LIST_DIR}/_picovga/font/font_boldB_8x16.cpp
                ${CMAKE_CURRENT_LIST_DIR}/_picovga/font/font_game_8x8.cpp
