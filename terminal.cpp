@@ -31,6 +31,7 @@ extern u8 TextBuf[TEXTSIZE];
 #define SPC         0x20
 #define ESC         0x1b
 #define DEL         0x7f
+#define BEL         0x07
 #define BSP         0x08
 #define LF          0x0a
 #define CR          0x0d 
@@ -124,7 +125,7 @@ static unsigned char slop_character(int x,int y){
 }
 
 static void shuffle(){
-    memmove (TextBuf+3*COLUMNS, TextBuf, TEXTSIZE-3*COLUMNS);
+    memmove (TextBuf, TextBuf+3*COLUMNS, TEXTSIZE-3*COLUMNS);
     for (int i = TEXTSIZE - 3*COLUMNS; i < TEXTSIZE; ) {
 		TextBuf[i++] = ' ';
 		TextBuf[i++] = color_bkg;
@@ -454,7 +455,7 @@ void terminal_handle_rx(u8 chrx) {
 
             if(csr.x>=COLUMNS){
                 csr.x=0;
-                if(csr.y==ROWS){
+                if(csr.y==(ROWS-1)){
                     shuffle();
                 }
                 else{
@@ -471,10 +472,13 @@ void terminal_handle_rx(u8 chrx) {
         else{
             // return, backspace etc
             switch (chrx){
+                case BEL:
+                    beep();
+                break;
                 case BSP:
-                if(csr.x>0){
-                    csr.x--;
-                }
+                    if(csr.x>0){
+                        csr.x--;
+                    }
                 break; 
                 case LF:
                 

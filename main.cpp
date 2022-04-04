@@ -27,6 +27,16 @@ u8 TextBuf[TEXTSIZE] __attribute__ ((aligned(4)));
 // copy of font
 static u8 Font_Copy[sizeof(FONT)] __attribute__ ((aligned(4)));
 
+// Beep control
+static int nBeep = 0;
+typedef enum {
+	NO_BEEP, BEEPING, WAIT_BEEP
+} BEEP_STATE;
+static BEEP_STATE beep_state = NO_BEEP;
+static uint32_t beep_end;
+static const uint32_t beep_time = 100;
+static const uint32_t beep_space = 200;
+
 // initialize video
 static void VideoInit()
 {
@@ -56,6 +66,57 @@ static void VideoInit()
 	VgaInitReq(&Vmode);
 }
 
+// Auxiliary function from tinyusb
+static inline uint32_t board_millis(void)
+{
+	return to_ms_since_boot(get_absolute_time());
+}
+
+// Init beep pin
+static void beep_init() {
+	#ifdef BUZZER_PIN
+	gpio_init (BUZZER_PIN);
+	gpio_set_dir (BUZZER_PIN, GPIO_OUT);
+	gpio_put (BUZZER_PIN, 0);
+	#endif
+}
+
+// Sound a beep
+void beep () {
+	#ifdef BUZZER_PIN
+	if (beep_state == NO_BEEP) {
+		// No beep active
+		beep_end = board_millis() + beep_time;
+		gpio_put (BUZZER_PIN, 1);
+		beep_state = BEEPING;
+	}
+	nBeep++;
+	#endif
+}
+
+// Treats beeping
+static void beep_task() {
+	if ((beep_state != NO_BEEP) && (board_millis() >= beep_end)) {
+		if (beep_state == BEEPING) {
+			// Finish beeping, wait before next beep
+			gpio_put (BUZZER_PIN, 0);
+			beep_end = board_millis() + beep_space;
+			beep_state = WAIT_BEEP;
+		} else if (beep_state == WAIT_BEEP) {
+			// End of the wait
+			if (--nBeep) {
+				// There are more beeps
+				beep_end = board_millis() + beep_time;
+				gpio_put (BUZZER_PIN, 1);
+				beep_state = BEEPING;
+			} else {
+				beep_state = NO_BEEP;
+			}
+
+		}
+	}
+}
+
 int main()
 {
 	// initialize video
@@ -69,6 +130,10 @@ int main()
 
 	// init UART
   	serial_init();
+
+	// init beep
+	beep_init();
+	beep();
 	
 	// main loop
 	while (true)
@@ -84,5 +149,9 @@ int main()
 
 		// trnasmit pending chars
 		serial_tx_task();
+
+		// take care of beep
+		beep_task();
 	}
 }
+

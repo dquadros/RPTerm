@@ -29,4 +29,6 @@
 #define TEXTWB	(TEXTW*3)       // text width byte (=240)
 #define TEXTSIZE (TEXTWB*TEXTH) // text box size in bytes (=9600)
 
+extern void beep();
+
 #endif // _MAIN_H
