@@ -7,7 +7,8 @@
  * - Shiela Dixon     (picoterm) https://peacockmedia.software  
  * - Miroslav Nemecek (picovga)  http://www.breatharian.eu/hw/picovga/index_en.html
  *
- * This file defines the hardware configurarion
+ * This file defines the hardware configurarion for my prototype with the RP2040-Zero
+ * You may have to change it if using a different board
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -26,6 +27,7 @@
 
 // BUZZER for Beep
 #define BUZZER_PIN      29      // undefine if no buzzer
+                                // change to 9 for the Pi Pico
 
 // VGA
 // Look for VGA_GPIO in vga_config.h
