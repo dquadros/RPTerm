@@ -37,6 +37,13 @@ static uint32_t beep_end;
 static const uint32_t beep_time = 100;
 static const uint32_t beep_space = 200;
 
+// LED control
+static uint32_t last_rx = 0;
+static bool led_on = false;
+static uint32_t led_end;
+static const uint32_t led_fast = 200;
+static const uint32_t led_slow = 500;
+
 // initialize video
 static void VideoInit()
 {
@@ -117,6 +124,33 @@ static void beep_task() {
 	}
 }
 
+// Init LED pin
+static void led_init() {
+	#ifdef STATUS_LED
+	gpio_init (STATUS_LED);
+	gpio_set_dir (STATUS_LED, GPIO_OUT);
+	gpio_put (STATUS_LED, 0);
+	#endif
+}
+
+// Flash status LED
+static void led_task() {
+	#ifdef STATUS_LED
+	uint32_t now = board_millis();
+	if (now >= led_end) {
+		led_on = !led_on;
+		gpio_put (STATUS_LED, led_on? 1 : 0);
+		uint32_t led_speed = led_fast;
+		if ((now - last_rx) > 1000) {
+			led_speed = led_slow;
+		}
+		led_end = now + led_speed;
+	}
+	#endif
+}
+
+
+// Main routine
 int main()
 {
 	// initialize video
@@ -131,6 +165,9 @@ int main()
 	// init UART
   	serial_init();
 
+	// init status eld
+	led_init();
+
 	// init beep
 	beep_init();
 	beep();
@@ -140,6 +177,7 @@ int main()
 	{
 		// handle rx chars
 		if (has_rx()) {
+			last_rx = board_millis();	// for status led
 			terminal_handle_rx (get_rx());
 		}
 
@@ -149,6 +187,9 @@ int main()
 
 		// trnasmit pending chars
 		serial_tx_task();
+
+		// flash led
+		led_task();
 
 		// take care of beep
 		beep_task();

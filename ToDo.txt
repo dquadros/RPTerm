@@ -6,4 +6,5 @@
 [ ] Add extra serial commands (BEL, color, etc)
 [ ] Add cursor key support
 [ ] Optimize scrolling
+[ ] Status LED
 [ ] Local Configuration

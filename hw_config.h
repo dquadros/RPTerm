@@ -29,6 +29,9 @@
 #define BUZZER_PIN      29      // undefine if no buzzer
                                 // change to 9 for the Pi Pico
 
+// Status LED
+#define STATUS_LED      11      // undefine if no LED
+
 // VGA
 // Look for VGA_GPIO in vga_config.h
 
