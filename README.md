@@ -72,8 +72,8 @@ These are the sequences generated for special keys:
 * End: ESC [ K
 * Up: ESC [ A
 * Down: ESC [ B
+* Right: ESC [ C
 * Left: ESC [ D
-* Right: ESC [ D
 * Del: 0x7F
 
 ## Credits
@@ -105,17 +105,20 @@ Testing was done with a RP2040-Zero, but it should not be hard to get it to work
 
 Hardware configuration is at the hwconfig.h file. The hardware directory has details for a few boards.
 
+## Status LED
+
+Microcontroller projects must have a blinking LED, right?
+
+The (optional) status LED blinks to indicate that the firmware is executing. It will blink more rapidly while receiving data.
+
 ## What's done and what's missing
 
 This is (and will be for a long time) a work in progress.
 
-The basics are in place: vga, serial and keyboard support (no special keys yet). 
-
-Basic terminal emulation is working. I'm still revising/rewriting it.
+The basics are in place: vga, serial and keyboard support. 
+Basic terminal emulation is working. I'm still revising/rewriting it and it need a lot of testing.
 
 Scrolling the screen is done by brute force. Having a table with line address will speed it up, but requires
 changing assembly code in pico_vga (and hopping I will not mess up the timing).
 
 No configuration yet. The plan is to access a configuration (and status) screen with some special key. Still have to figure out where to store it: flash, external eeprom or SD card (this would also allow to save and send files, but will need a lot of work).
-
-

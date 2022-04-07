@@ -21,6 +21,25 @@
  */
 
 #include "include.h"
+
+// Special keys
+#define KEY_UP      0x80
+#define KEY_DWN     0x81
+#define KEY_LFT     0x82
+#define KEY_RGT     0x83
+#define KEY_HOME    0x84
+#define KEY_END     0x85
+#define KEY_F1      0x86
+#define KEY_F2      0x87
+#define KEY_F3      0x88
+#define KEY_F4      0x89
+#define KEY_F5      0x8A
+#define KEY_F6      0x8B
+#define KEY_F7      0x8C
+#define KEY_F8      0x8D
+#define KEY_F9      0x8E
+#define KEY_F10     0x8F
+
 #include "keycode_to_ascii.h"
 
 // Keyboard address and instance (assumes there is only one)
@@ -48,6 +67,28 @@ static uint8_t const keycode2ascii[160][2] =  { HID_KEYCODE_TO_ASCII_BR };
 #else
 static uint8_t const keycode2ascii[128][2] =  { HID_KEYCODE_TO_ASCII };
 #endif
+
+#define NKEYS (sizeof(keycode2ascii)/sizeof(keycode2ascii[0]))
+
+// Special keys sequences
+static char const *keysequence[] = {
+  "\x1B[A",   // UP
+  "\x1B[B",   // DOWN
+  "\x1B[D",   // LEFT
+  "\x1B[C",   // RIGHT
+  "\x1B[H",   // HOME
+  "\x1B[K",   // END
+  "\x1B[OP",  // F1
+  "\x1B[OQ",  // F2
+  "\x1B[OR",  // F3
+  "\x1B[OS",  // F4
+  "\x1B[OT",  // F5
+  "\x1B[OU",  // F6
+  "\x1B[OV",  // F7
+  "\x1B[OW",  // F8
+  "\x1B[OX",  // F9
+  "\x1B[OY"   // F10
+};
 
 // Each HID instance has multiple reports
 static uint8_t _report_count[CFG_TUH_HID];
@@ -193,24 +234,37 @@ static void process_kbd_report(hid_keyboard_report_t const *report)
       }else
       {
         // not existed in previous report means the current key is pressed
-        uint8_t ch = keycode2ascii[report->keycode[i]][0];  // unshifted key code, to test for letters
+        uint8_t key = report->keycode[i];
+        uint8_t ch = (key < NKEYS) ? keycode2ascii[i][0] : 0; // unshifted key code, to test for letters
         bool const is_ctrl =  report->modifier & (KEYBOARD_MODIFIER_LEFTCTRL | KEYBOARD_MODIFIER_RIGHTCTRL);
         bool is_shift =  report->modifier & (KEYBOARD_MODIFIER_LEFTSHIFT | KEYBOARD_MODIFIER_RIGHTSHIFT);
         if (capslock_on && (ch >='a') && (ch <= 'z')) {
             // capslock affects only letters
             is_shift = !is_shift;
         }
-        ch = keycode2ascii[report->keycode[i]][is_shift ? 1 : 0];
+        ch = (key < NKEYS) ? keycode2ascii[report->keycode[i]][is_shift ? 1 : 0] : 0;
 
-        if(report->keycode[i]!=HID_KEY_CAPS_LOCK){
-          if(is_ctrl && ch>95){
-            put_tx(ch-96);
-          }
-          else{
+        if(report->keycode[i]!=HID_KEY_CAPS_LOCK) {
+          if (ch > 0x7F) {
+            // special key
+            char const *seq = keysequence[ch - 0x80];
+            while (*seq) {
+              put_tx(*seq);
+              seq++;  
+            }
+          } else if (is_ctrl) {
+            // control code
+            if ((ch >= 0x60) && (ch <= 0x7F)) {
+              put_tx(ch - 0x60);
+            } else 
+            if ((ch >= 0x40) && (ch <= 0x5F)) {
+              put_tx(ch - 0x40);
+            }
+          } else if (ch != 0) {
+            // normal key
             put_tx(ch);
           }
         }
-
       }
     }
   }
