@@ -5,11 +5,14 @@ Serial Terminal Firmware for RP2040 Boards
 
 RPTerm will implement a serial terminal with the following features planed:
 
-* VGA video output (60 lines of 80 characters, 256 colors)
+* VGA video output (30 lines of 80 characters, 256 colors)
 * USB keyboard input
 * Serial communication with UART on GPIO 12 & 13 (configurable baud rate)
 * Support for VT-100 style commands
 * Generates VT-100 style sequences for cursor keys
+* Status Line (TODO)
+* Configuration screen (TODO)
+* SD Card interface, with send & receive files (TODO)
 
 ## Terminal Commands
 
@@ -116,9 +119,10 @@ The (optional) status LED blinks to indicate that the firmware is executing. It 
 This is (and will be for a long time) a work in progress.
 
 The basics are in place: vga, serial and keyboard support. 
-Basic terminal emulation is working. I'm still revising/rewriting it and it need a lot of testing.
+Basic terminal emulation is working. I'm still revising/rewriting it and it needs a lot of testing.
 
 Scrolling the screen is done by brute force. Having a table with line address will speed it up, but requires
-changing assembly code in pico_vga (and hopping I will not mess up the timing).
+changing assembly code in pico_vga (and hoping I will not mess up the timing).
 
-No configuration yet. The plan is to access a configuration (and status) screen with some special key. Still have to figure out where to store it: flash, external eeprom or SD card (this would also allow to save and send files, but will need a lot of work).
+No configuration yet. The plan is to access a configuration (and status) screen with some special key.  Config
+will be stored in a SD card. Special keys will be used to send and receive text files from the SD.
