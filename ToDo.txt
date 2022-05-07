@@ -2,9 +2,12 @@
 [x] Include serial port suport
 [x] Include basic terminal emulation
 [x] Include keyboard support
-[ ] Refactor basic terminal emulation
-[ ] Add extra serial commands (BEL, color, etc)
-[ ] Add cursor key support
+[x] Refactor basic terminal emulation
+[x] Add extra serial commands (BEL, color, etc)
+[x] Add cursor key support
 [ ] Optimize scrolling
-[ ] Status LED
+[x] Status LED
 [ ] Local Configuration
+[ ] SD support
+[ ] File send
+[ ] File receive

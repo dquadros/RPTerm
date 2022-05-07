@@ -419,7 +419,7 @@ static void esc_sequence_received(){
     reset_escape_sequence();
 }
 
-static char ident[] = "RPTerm v0.2  DQ";
+static char ident[] = "RPTerm v0.3  DQ";
 
 // Terminal emulation initialization
 void terminal_init(){
