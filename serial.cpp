@@ -44,7 +44,7 @@ static void on_uart_rx();
 //--------------------------------------------------------------------+
 
 // Put received char in the buffer
-inline void put_rx(uint8_t ch) {
+void put_rx(uint8_t ch) {
     buffer_rx[buf_rx_in] = ch;
     int aux = buf_rx_in+1;
     if (aux >= RX_BUFFER_SIZE) {

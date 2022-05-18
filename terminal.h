@@ -27,7 +27,27 @@
 #ifndef _TERMINAL_H
 #define _TERMINAL_H
 
+// ASCII chars
+#define SPC         0x20
+#define ESC         0x1b
+#define DEL         0x7f
+#define BEL         0x07
+#define BSP         0x08
+#define HT          0x09
+#define LF          0x0a
+#define CR          0x0d 
+#define FF          0x0c
+
+extern u8 *linAddr[TEXTH];
+
 extern void terminal_init(void);
 extern void terminal_handle_rx(u8 chrx);
+extern void send_key(uint8_t ch);
+extern void receive_key(uint8_t ch);
+
+extern void cls(void);
+extern void cls(u8 clr_bkg, u8 clr_chr);
+extern void home(void);
+extern void update_sl_mode();
 
 #endif

@@ -27,18 +27,7 @@
 
 // The screen
 extern u8 TextBuf[TEXTSIZE];
-static u8 *linAddr[ROWS];
-
-// ASCII chars
-#define SPC         0x20
-#define ESC         0x1b
-#define DEL         0x7f
-#define BEL         0x07
-#define BSP         0x08
-#define HT          0x09
-#define LF          0x0a
-#define CR          0x0d 
-#define FF          0x0c
+u8 *linAddr[ROWS];
 
 // escape sequence state
 #define ESC_READY               0
@@ -71,17 +60,103 @@ typedef struct scrpos {
 struct scrpos csr = {0,0};
 struct scrpos saved_csr = {0,0};
 
+// Special keys sequences
+static char const *keysequence[] = {
+    "\x1B[A",  // UP
+    "\x1B[B",  // DOWN
+    "\x1B[D",  // LEFT
+    "\x1B[C",  // RIGHT
+    "\x1B[H",  // HOME
+    "\x1B[K",  // END
+    "\x1B[OP", // F1
+    "\x1B[OQ", // F2
+    "\x1B[OR", // F3
+    "\x1B[OS", // F4
+    "\x1B[OT", // F5
+    "\x1B[OU", // F6
+    "\x1B[OV", // F7
+    "\x1B[OW", // F8
+    "\x1B[OX", // F9
+    "\x1B[OY"  // F10
+};
+
+// Status line control
+// .123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+// MODE      BAUD      ID                                                 L=XX C=XX
+#define SL_MODE 0
+#define SL_BAUD 10
+#define SL_ID   20
+#define SL_LC   71
+static bool show_sl = true;
+static int nlines = ROWS-1;
+static u8 color_sl_chr = COL_WHITE;
+static u8 color_sl_bkg = COL_BLUE;
 
 // local rotines
 static void print_string(char *str);
+static void init_sl(void);
+static void update_sl_lc(void);
+static void write_sl(int col, const char *str);
 
+// Send a key, expanding sequences
+void send_key (uint8_t ch)
+{
+  if (ch > 0x7F)
+  {
+    // special key
+    char const *seq = keysequence[ch - 0x80];
+    while (*seq)
+    {
+      put_tx(*seq);
+      seq++;
+    }
+  }
+  else if (ch != 0)
+  {
+    // normal key
+    put_tx(ch);
+  }
+}
+
+// Simulate reception of a key
+void receive_key  (uint8_t ch)
+{
+  if (ch > 0x7F)
+  {
+    // special key
+    char const *seq = keysequence[ch - 0x80];
+    while (*seq)
+    {
+      put_rx(*seq);
+      seq++;
+    }
+  }
+  else if (ch != 0)
+  {
+    // normal key
+    put_rx(ch);
+  }
+}
+
+// Move cursor to home
+void home() {
+    csr.x = csr.y = 0;
+}
 
 // Clear screen
-static void cls() {
-	for (int i = 0; i < TEXTSIZE; ) {
+void cls() {
+    cls(color_bkg, color_chr);
+}
+
+void cls(u8 clr_bkg, u8 clr_chr) {
+    int end = TEXTSIZE;
+    if (show_sl) {
+        end -= 3* COLUMNS;
+    }
+	for (int i = 0; i < end; ) {
 		TextBuf[i++] = ' ';
-		TextBuf[i++] = color_bkg;
-    	TextBuf[i++] = color_chr;
+		TextBuf[i++] = clr_bkg;
+    	TextBuf[i++] = clr_chr;
 	}
 }
 
@@ -118,7 +193,7 @@ static void clear_entire_line(){
 // clear screen from cursor to end of screen
 static void clear_screen_from_csr(){
     int l = csr.y;
-    while (l < ROWS) {
+    while (l < nlines) {
         int start = (l == csr.y)? csr.x : 0;
         u8 *p = linAddr[l] + 3*start;
         for (int c = start; c < COLUMNS; c++) {
@@ -179,8 +254,8 @@ static void constrain_cursor_values(){
     if (csr.y < 0) {
         csr.y=0;
     }
-    if (csr.y >= ROWS) {
-        csr.y = ROWS-1;
+    if (csr.y >= nlines) {
+        csr.y = nlines-1;
     }
 }
 
@@ -335,14 +410,10 @@ static void esc_sequence_received(){
                         clear_screen_to_csr();
                         break;
                     case 2:
-                        // clear entire screen
-                        cls();
-                        csr.x=0; csr.y=0;
-                        break;
                     case 3:
                         // clear entire screen
                         cls();
-                        csr.x=0; csr.y=0;
+                        home();
                         break;
                 }
                 break;
@@ -352,7 +423,7 @@ static void esc_sequence_received(){
                 if (n == 0) {
                     n = 1;
                 }
-                if (n >= ROWS) {
+                if (n >= nlines) {
                     cls();
                 } else {
                     scroll_up(n);
@@ -419,8 +490,6 @@ static void esc_sequence_received(){
     reset_escape_sequence();
 }
 
-static char ident[] = "RPTerm v0.3  DQ";
-
 // Terminal emulation initialization
 void terminal_init(){
 
@@ -433,18 +502,70 @@ void terminal_init(){
 
     // Init screen and emulation state
     cls();
+    home();
+    if (show_sl) {
+        init_sl();
+    }
     reset_escape_sequence();
-
-    // Print identification
-    csr.x = (COLUMNS-strlen(ident))/2;
-    print_string(ident);
-    csr.x = 0;
-    csr.y = 2;
 
     // Show cursor
     make_cursor_visible(true);
     show_cursor();
 }
+
+static char ident[] = "RPTerm v0.4  DQ";
+
+// Initialize status line
+static void init_sl() {
+    // clear status line
+	for (int i = TEXTSIZE - 3*COLUMNS; i < TEXTSIZE; ) {
+		TextBuf[i++] = ' ';
+		TextBuf[i++] = color_sl_bkg;
+    	TextBuf[i++] = color_sl_chr;
+	}
+
+    // fill the fields
+    update_sl_mode();
+    write_sl(SL_BAUD, "9600");      // TODO: config
+    write_sl(SL_ID, ident);
+    update_sl_lc();
+}
+
+// update terminal mode in status line
+void update_sl_mode() {
+    if (show_sl) {
+        switch (term_mode) {
+            case ONLINE:
+                write_sl(SL_MODE, "ONLINE");
+                break;
+            case LOCAL:
+                write_sl(SL_MODE, "LOCAL ");
+                break;
+            case CONFIG:
+                write_sl(SL_MODE, "CONFIG");
+                break;
+        }
+    }
+}
+
+// update cursor pos in status line
+static void update_sl_lc() {
+    if (show_sl) {
+        char buf[10];
+        sprintf(buf, "L=%02d C=%02d", csr.y+1, csr.x+1);
+        write_sl(SL_LC, buf);
+    }
+}
+
+// Write string to status line
+static void write_sl (int col, const char *str) {
+    uint8_t *pos = linAddr[nlines] + 3*col;
+    for(int i=0; str[i] != '\0'; i++){
+        *pos = str[i];
+        pos += 3;
+    }
+}
+
 
 // Aux rotine to print a message
 static void print_string(char *str){
@@ -531,8 +652,7 @@ void terminal_handle_rx(u8 chrx) {
                     break; 
                 case FF:
                     cls(); 
-                    csr.x = 0; 
-                    csr.y = 0;
+                    home();
                     break; 
             }
         }
@@ -567,5 +687,6 @@ void terminal_handle_rx(u8 chrx) {
         }
     }
 
+    update_sl_lc();
     show_cursor();
 }

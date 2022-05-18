@@ -18,17 +18,6 @@
  *
  */
 
-/*
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-
-#include "pico.h"
-#include "pico/stdlib.h"
-#include "hardware/uart.h"
-#include "hardware/irq.h"
-*/
-
 #ifndef _SERIAL_H
 #define _SERIAL_H
 

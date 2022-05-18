@@ -1,4 +1,3 @@
-
 /*
  * RPTERM - Terminal software for Pi Pico
  * USB keyboard input, VGA video output, communication via UART
@@ -8,7 +7,7 @@
  * - Shiela Dixon     (picoterm) https://peacockmedia.software  
  * - Miroslav Nemecek (picovga)  http://www.breatharian.eu/hw/picovga/index_en.html
  *
- * Main definitions
+ * Config screen
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -20,25 +19,33 @@
  *
  */
 
-// ----------------------------------------------------------------------------
-//                                   Includes
-// ----------------------------------------------------------------------------
+#include "include.h"
 
-#include "global.h"	// global common definitions
-#include "build/vga.pio.h"		// VGA PIO compilation
+// Configuration screen colors
+static u8 color_cfg_chr = COL_WHITE;
+static u8 color_cfg_bkg = COL_DARKGREEN;
 
-// main code
-#include "main.h"
+// Local rotines
+static void config_write(int l, int c, const char *str);
 
-// serial communication
-#include "serial.h"
 
-// usb keyboard
-#include "keybd.h"
+// Enter local configuration mode
+void config_enter() {
+    cls(color_cfg_bkg, color_cfg_chr);
+    config_write(0, 0, "TERMINAL CONFIGURATION");
+}
 
-// terminal emulation
-#include "terminal.h"
+// Write string to configuration screen
+static void config_write(int l, int c, const char *str) {
+    uint8_t *pos = linAddr[l] + 3*c;
+    for(int i=0; str[i] != '\0'; i++){
+        *pos = str[i];
+        pos += 3;
+    }
+}
 
-// configuraton
-#include "config.h"
+// Handle keys in config screen
+void config_key(u8 key){
+    // TODO
+}
 

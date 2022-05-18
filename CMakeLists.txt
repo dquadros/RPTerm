@@ -5,7 +5,7 @@ include(pico_sdk_import.cmake)
 
 pico_sdk_init()
 
-project(picovgatest VERSION 1.0.0)
+project(rpterm VERSION 1.0.0)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
@@ -25,11 +25,12 @@ add_compile_options(-Wall
     -DLOCALISE_BR
 )
 
-add_executable(picovgatest
+add_executable(rpterm
                main.cpp
                serial.cpp
                terminal.cpp
                keybd.cpp
+               config.cpp
 
                ${CMAKE_CURRENT_LIST_DIR}/_picovga/render/vga_atext.S
                ${CMAKE_CURRENT_LIST_DIR}/_picovga/render/vga_attrib8.S
@@ -91,17 +92,17 @@ add_executable(picovgatest
                ${CMAKE_CURRENT_LIST_DIR}/_picovga/font/font_thin_8x8.cpp
                )
 
-pico_enable_stdio_usb(picovgatest 0)
-pico_enable_stdio_uart(picovgatest 0)
+pico_enable_stdio_usb(rpterm 0)
+pico_enable_stdio_uart(rpterm 0)
                
 
-target_include_directories(picovgatest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(rpterm PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-pico_generate_pio_header(picovgatest ${CMAKE_CURRENT_LIST_DIR}/_picovga/vga.pio)
+pico_generate_pio_header(rpterm ${CMAKE_CURRENT_LIST_DIR}/_picovga/vga.pio)
 
-pico_add_extra_outputs(picovgatest)
+pico_add_extra_outputs(rpterm)
 
-target_link_libraries(picovgatest
+target_link_libraries(rpterm
                       pico_multicore
                       pico_stdlib
                       hardware_gpio

@@ -26,27 +26,15 @@
 
 #include "include.h"
 
-// Special keys
-#define KEY_UP 0x80
-#define KEY_DWN 0x81
-#define KEY_LFT 0x82
-#define KEY_RGT 0x83
-#define KEY_HOME 0x84
-#define KEY_END 0x85
-#define KEY_F1 0x86
-#define KEY_F2 0x87
-#define KEY_F3 0x88
-#define KEY_F4 0x89
-#define KEY_F5 0x8A
-#define KEY_F6 0x8B
-#define KEY_F7 0x8C
-#define KEY_F8 0x8D
-#define KEY_F9 0x8E
-#define KEY_F10 0x8F
-
 #include "keycode_to_ascii.h"
 
 #define MAX_KEY 6   // Maximun number of pressed key in the boot layout report
+
+// Keyboard buffer
+#define KBD_BUFFER_SIZE 100
+static uint8_t buffer_kbd[KBD_BUFFER_SIZE];
+static int buf_kbd_in, buf_kbd_out;
+
 
 // Keyboard address and instance (assumes there is only one)
 static uint8_t keybd_dev_addr = 0xFF;
@@ -89,26 +77,6 @@ static uint8_t const keycode2ascii[128][2] = {HID_KEYCODE_TO_ASCII};
 
 #define NKEYS (sizeof(keycode2ascii) / sizeof(keycode2ascii[0]))
 
-// Special keys sequences
-static char const *keysequence[] = {
-    "\x1B[A",  // UP
-    "\x1B[B",  // DOWN
-    "\x1B[D",  // LEFT
-    "\x1B[C",  // RIGHT
-    "\x1B[H",  // HOME
-    "\x1B[K",  // END
-    "\x1B[OP", // F1
-    "\x1B[OQ", // F2
-    "\x1B[OR", // F3
-    "\x1B[OS", // F4
-    "\x1B[OT", // F5
-    "\x1B[OU", // F6
-    "\x1B[OV", // F7
-    "\x1B[OW", // F8
-    "\x1B[OX", // F9
-    "\x1B[OY"  // F10
-};
-
 // Each HID instance has multiple reports
 static uint8_t _report_count[CFG_TUH_HID];
 static tuh_hid_report_info_t _report_info_arr[CFG_TUH_HID][MAX_REPORT];
@@ -116,30 +84,48 @@ static tuh_hid_report_info_t _report_info_arr[CFG_TUH_HID][MAX_REPORT];
 static void process_kbd_report(hid_keyboard_report_t const *report);
 static void process_mouse_report(hid_mouse_report_t const *report);
 
-// Auxiliary function from tinyusb
-static inline uint32_t board_millis(void)
+
+// Module init
+void keyb_init(void)
 {
-	return to_ms_since_boot(get_absolute_time());
+    buf_kbd_in = buf_kbd_out = 0;
 }
 
-// Send a key, expanding sequences
-static inline void send_key (uint8_t ch)
-{
-  if (ch > 0x7F)
-  {
-    // special key
-    char const *seq = keysequence[ch - 0x80];
-    while (*seq)
-    {
-      put_tx(*seq);
-      seq++;
+//--------------------------------------------------------------------+
+// Keyboard buffer routines
+//--------------------------------------------------------------------+
+
+// Put key in the buffer
+static inline void put_kbd(uint8_t key) {
+    buffer_kbd[buf_kbd_in] = key;
+    int aux = buf_kbd_in+1;
+    if (aux >= KBD_BUFFER_SIZE) {
+        aux = 0;
     }
-  }
-  else if (ch != 0)
-  {
-    // normal key
-    put_tx(ch);
-  }
+    if (aux != buf_kbd_out) {
+        // buffer not full
+        buf_kbd_in = aux;
+    }
+}
+
+// Test if buffer not empty
+bool has_kbd() {
+    return buf_kbd_in != buf_kbd_out;
+}
+
+// Get next key from the buffer
+uint8_t get_kbd() {
+    if (has_kbd()) {
+        uint8_t key = buffer_kbd[buf_kbd_out];
+        int aux = buf_kbd_out+1;
+        if (aux >= KBD_BUFFER_SIZE) {
+            aux = 0;
+        }
+        buf_kbd_out = aux;
+        return key;
+    } else {
+        return 0;   // buffer empty
+    }
 }
 
 //--------------------------------------------------------------------+
@@ -161,7 +147,7 @@ void hid_app_task(void)
     {
       if (repeat_char[i] && (board_millis() > repeat_time[i]))
       {
-        send_key(repeat_char[i]);
+        put_kbd(repeat_char[i]);
         repeat_time[i] += REPEAT_INTERVAL;
       }
     }
@@ -311,6 +297,7 @@ static void process_kbd_report(hid_keyboard_report_t const *report)
       uint8_t ch = (key < NKEYS) ? keycode2ascii[key][0] : 0; // unshifted key code, to test for letters
       bool const is_ctrl = report->modifier & (KEYBOARD_MODIFIER_LEFTCTRL | KEYBOARD_MODIFIER_RIGHTCTRL);
       bool is_shift = report->modifier & (KEYBOARD_MODIFIER_LEFTSHIFT | KEYBOARD_MODIFIER_RIGHTSHIFT);
+      bool is_alt = report->modifier & (KEYBOARD_MODIFIER_LEFTALT | KEYBOARD_MODIFIER_RIGHTALT);
       if (capslock_on && (ch >= 'a') && (ch <= 'z'))
       {
         // capslock affects only letters
@@ -329,6 +316,24 @@ static void process_kbd_report(hid_keyboard_report_t const *report)
           ch = ch - 0x40;
         }
       }
+      if (is_alt)
+      {
+        switch (ch) 
+        {
+          case 'c': case 'C':
+            ch = KEY_ALT_C;
+            break;
+          case 'l': case 'L':
+            ch = KEY_ALT_L;
+            break;
+          case 'r': case 'R':
+            ch = KEY_ALT_R;
+            break;
+          case 't': case 'T':
+            ch = KEY_ALT_T;
+            break;
+        }
+      }
 
       // record key for auto repeat
       for (int j = 0; j < MAX_KEY; j++)
@@ -342,8 +347,8 @@ static void process_kbd_report(hid_keyboard_report_t const *report)
         }
       }
 
-      // Send the key
-      send_key (ch);
+      // store the key
+      put_kbd (ch);
     }
   }
 

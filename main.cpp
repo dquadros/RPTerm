@@ -27,6 +27,9 @@ u8 TextBuf[TEXTSIZE] __attribute__ ((aligned(4)));
 // copy of font
 static u8 Font_Copy[sizeof(FONT)] __attribute__ ((aligned(4)));
 
+// Terminal mode of operation
+TERM_MODE term_mode = ONLINE;
+
 // Beep control
 static int nBeep = 0;
 typedef enum {
@@ -71,12 +74,6 @@ static void VideoInit()
 
 	// initialize videomode
 	VgaInitReq(&Vmode);
-}
-
-// Auxiliary function from tinyusb
-static inline uint32_t board_millis(void)
-{
-	return to_ms_since_boot(get_absolute_time());
 }
 
 // Init beep pin
@@ -149,12 +146,75 @@ static void led_task() {
 	#endif
 }
 
+// Handle keyboard input
+static void kbd_task() {
+	uint8_t key = get_kbd();
+	switch (term_mode) {
+		case ONLINE:
+			switch (key) {
+				case KEY_ALT_C:
+					config_enter();
+					term_mode = CONFIG;
+					update_sl_mode();
+					break;
+				case KEY_ALT_L:
+					term_mode = LOCAL;
+					update_sl_mode();
+					break;
+				case KEY_ALT_R:
+					// TODO
+					break;
+				case KEY_ALT_T:
+					// TODO
+					break;
+				default:
+					send_key(key);
+					break;
+			}
+			break;
+		case LOCAL:
+			switch (key) {
+				case KEY_ALT_C:
+					config_enter();
+					term_mode = CONFIG;
+					update_sl_mode();
+					break;
+				case KEY_ALT_L:
+					term_mode = ONLINE;
+					update_sl_mode();
+					break;
+				case KEY_ALT_R:
+					// TODO
+					break;
+				case KEY_ALT_T:
+					// TODO
+					break;
+				default:
+					receive_key(key);
+					break;
+			}
+			break;
+		case CONFIG:
+			if (key == ESC) {
+				term_mode = ONLINE;
+				update_sl_mode();
+				cls();
+			} else {
+				config_key (key);
+			}
+			break;
+	}
+}
+
 
 // Main routine
 int main()
 {
 	// initialize video
 	VideoInit();
+
+	// initialize keyboard
+	keyb_init();
 
 	// Init terminal emulation
 	terminal_init();
@@ -184,6 +244,11 @@ int main()
 		// handle usb
 	    tuh_task();
 		hid_app_task();
+
+		// handle keys
+		if (has_kbd()) {
+			kbd_task();
+		}
 
 		// trnasmit pending chars
 		serial_tx_task();

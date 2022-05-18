@@ -29,6 +29,15 @@
 #define TEXTWB	(TEXTW*3)       // text width byte (=240)
 #define TEXTSIZE (TEXTWB*TEXTH) // text box size in bytes (=9600)
 
+// Terminal mode of operation
+typedef enum { ONLINE, CONFIG, LOCAL } TERM_MODE;
+extern TERM_MODE term_mode;
 extern void beep();
+
+// Auxiliary function from tinyusb
+static inline uint32_t board_millis(void)
+{
+	return to_ms_since_boot(get_absolute_time());
+}
 
 #endif // _MAIN_H

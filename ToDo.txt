@@ -7,7 +7,9 @@
 [x] Add cursor key support
 [ ] Optimize scrolling
 [x] Status LED
-[ ] Local Configuration
+[ ] Status line
+[ ] Local mode: expand key and put in rx buffer
+[ ] Config mode
 [ ] SD support
 [ ] File send
 [ ] File receive
