@@ -7,9 +7,37 @@
 [x] Add cursor key support
 [ ] Optimize scrolling
 [x] Status LED
-[ ] Status line
-[ ] Local mode: expand key and put in rx buffer
+[x] Status line
+[x] Local mode: expand key and put in rx buffer
 [ ] Config mode
+    - Serial [ ] baud [ ] format
+    - Emulation [ ] autowrap [ ] CR = CR LF  [ ] LF = CR LF [ ] BS erases
+    - Screen Colors [ ] bkg [ ] chr 
+    - Status Line Colors [ ] bkg [ ] chr 
+    - Status Line [ ] ON/OFF
+
+    CONFIGURATION (ESC to exit)
+    +----------
+    ! SERIAL
+    !   baud: x
+    ! format:
+    +----------
+    +----------
+    ! EMULATION
+    !    autowrap: x
+    !   BS erases:
+    !  CR = CR LF:
+    !  LF = CR LF:
+    ! Status Line:
+    +----------
+    +----------
+    | COLORS
+    ! Screen Bkg: x
+    ! Screen Chr:
+    ! Status Bkg:
+    ! Status Chr:
+    +----------
+
 [ ] SD support
 [ ] File send
 [ ] File receive

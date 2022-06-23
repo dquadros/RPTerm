@@ -31,11 +31,13 @@ static int buf_rx_in, buf_rx_out;
 static uint8_t buffer_tx[TX_BUFFER_SIZE];
 static int buf_tx_in, buf_tx_out;
 
-// UART parameters
+// UART default parameters
 #define BAUD_RATE       115200
 #define DATA_BITS       8
 #define STOP_BITS       1
 #define PARITY          UART_PARITY_NONE
+
+uint serial_baud = BAUD_RATE;
 
 static void on_uart_rx();
 
@@ -147,6 +149,23 @@ void serial_init() {
     // Now enable the UART to send interrupts - RX only
     uart_set_irq_enables(UART_ID, true, false);
 
+}
+
+// UART reconfig
+void serial_config(uint baud, SERIAL_FMT fmt) {
+    uart_set_baudrate(UART_ID, baud);
+    serial_baud = baud;
+    switch (fmt) {
+        case FMT_8N1:
+            uart_set_format(UART_ID, 8, 1, UART_PARITY_NONE);
+            break;
+        case FMT_7E1:
+            uart_set_format(UART_ID, 7, 1, UART_PARITY_EVEN);
+            break;
+        case FMT_7O1:
+            uart_set_format(UART_ID, 7, 1, UART_PARITY_ODD);
+            break;
+    }
 }
 
 // UART Tx task

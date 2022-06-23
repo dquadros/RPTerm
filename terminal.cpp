@@ -45,9 +45,16 @@ static unsigned char esc_final_byte;
 // screen control
 static bool cursor_visible;
 static unsigned char chr_under_csr = 0xFF;
-static u8 color_chr = COL_WHITE;
-static u8 color_bkg = COL_SEMIBLUE;
 
+// configurations
+u8 color_chr = COL_WHITE;
+u8 color_bkg = COL_SEMIBLUE;
+u8 color_sl_chr = COL_WHITE;
+u8 color_sl_bkg = COL_BLUE;
+bool autowrap, bserases, cr_crlf, lf_crlf;
+bool show_sl = true;
+
+// color available to ANSI commands
 static const u8 ansi_pallet[] = {
     COL_BLACK, COL_RED, COL_GREEN, COL_YELLOW, COL_BLUE, COL_MAGENTA, COL_CYAN, COL_WHITE
 };
@@ -87,10 +94,7 @@ static char const *keysequence[] = {
 #define SL_BAUD 10
 #define SL_ID   20
 #define SL_LC   71
-static bool show_sl = true;
 static int nlines = ROWS-1;
-static u8 color_sl_chr = COL_WHITE;
-static u8 color_sl_bkg = COL_BLUE;
 
 // local rotines
 static void print_string(char *str);
@@ -513,7 +517,7 @@ void terminal_init(){
     show_cursor();
 }
 
-static char ident[] = "RPTerm v0.4  DQ";
+static char ident[] = "RPTerm v0.5  DQ";
 
 // Initialize status line
 static void init_sl() {

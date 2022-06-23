@@ -40,6 +40,10 @@
 
 extern u8 *linAddr[TEXTH];
 
+extern u8 color_chr, color_bkg, color_sl_chr, color_sl_bkg;
+extern bool autowrap, bserases, cr_crlf, lf_crlf;
+extern bool show_sl;
+
 extern void terminal_init(void);
 extern void terminal_handle_rx(u8 chrx);
 extern void send_key(uint8_t ch);

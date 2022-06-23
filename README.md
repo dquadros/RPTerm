@@ -10,8 +10,8 @@ RPTerm will implement a serial terminal with the following features planed:
 * Serial communication with UART on GPIO 12 & 13 (configurable baud rate)
 * Support for VT-100 style commands
 * Generates VT-100 style sequences for cursor keys
-* Status Line (TODO)
-* Configuration screen (TODO)
+* Status Line (WIP)
+* Configuration screen (WIP)
 * SD Card interface, with send & receive files (TODO)
 
 ## Terminal Commands
@@ -79,6 +79,25 @@ These are the sequences generated for special keys:
 * Left: ESC [ D
 * Del: 0x7F
 
+## Local Functions
+
+The following ALT letter combinations are used for local functions:
+
+* ALT C: Enter configuration screen.
+* ALT L: Changes between on-line mode and local mode (characters typed are treated as received characters).
+* ALT R: Receive a file (TODO)
+* ALT T: Transmit a file (TODO)
+
+## Configuration Screen
+
+*Work in Progress*
+
+The configuration screen is entered by typing ALT C and left by typing ESC.
+
+To navigate between fields, use the up and down arrows.
+
+To change a field, use space or + to change to the next value and - the previous value.
+
 ## Credits
 
 RPTerm is inspired and based on picoterm 
@@ -124,5 +143,6 @@ Basic terminal emulation is working. I'm still revising/rewriting it and it need
 Scrolling the screen is done by brute force. Having a table with line address will speed it up, but requires
 changing assembly code in pico_vga (and hoping I will not mess up the timing).
 
-No configuration yet. The plan is to access a configuration (and status) screen with some special key.  Config
-will be stored in a SD card. Special keys will be used to send and receive text files from the SD.
+The configuration screen is under construction.
+
+Hardware will be update to include a SD card socket. Config will be stored in the SD card. Special keys will be used to send and receive text files from the SD.

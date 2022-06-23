@@ -21,11 +21,16 @@
 #ifndef _SERIAL_H
 #define _SERIAL_H
 
-bool has_rx(void);
-void put_rx(uint8_t ch);
-uint8_t get_rx(void);
-void put_tx(uint8_t ch);
-void serial_init(void);
-void serial_tx_task(void);
+typedef enum { FMT_8N1 = 0, FMT_7E1 = 1, FMT_7O1 = 2 } SERIAL_FMT;
+
+extern uint serial_baud;
+
+extern bool has_rx(void);
+extern void put_rx(uint8_t ch);
+extern uint8_t get_rx(void);
+extern void put_tx(uint8_t ch);
+extern void serial_init(void);
+extern void serial_config(uint baud, SERIAL_FMT fmt);
+extern void serial_tx_task(void);
 
 #endif
