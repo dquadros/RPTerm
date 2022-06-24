@@ -31,14 +31,6 @@ static int buf_rx_in, buf_rx_out;
 static uint8_t buffer_tx[TX_BUFFER_SIZE];
 static int buf_tx_in, buf_tx_out;
 
-// UART default parameters
-#define BAUD_RATE       115200
-#define DATA_BITS       8
-#define STOP_BITS       1
-#define PARITY          UART_PARITY_NONE
-
-uint serial_baud = BAUD_RATE;
-
 static void on_uart_rx();
 
 //--------------------------------------------------------------------+
@@ -123,10 +115,9 @@ void serial_init() {
     buf_rx_in = buf_rx_out = 0;
     buf_tx_in = buf_tx_out = 0;
 
-    uart_init(UART_ID, BAUD_RATE);
+    uart_init(UART_ID, config_getbaudrate());
     uart_set_hw_flow(UART_ID,false,false);
-    uart_set_format(UART_ID, DATA_BITS, STOP_BITS, PARITY);
-
+    serial_config(config_getbaudrate(), config_getfmt());
 
     // Set the TX and RX pins by using the function select on the GPIO
     // Set datasheet for more information on function select
@@ -154,7 +145,6 @@ void serial_init() {
 // UART reconfig
 void serial_config(uint baud, SERIAL_FMT fmt) {
     uart_set_baudrate(UART_ID, baud);
-    serial_baud = baud;
     switch (fmt) {
         case FMT_8N1:
             uart_set_format(UART_ID, 8, 1, UART_PARITY_NONE);

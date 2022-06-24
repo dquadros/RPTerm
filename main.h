@@ -29,6 +29,10 @@
 #define TEXTWB	(TEXTW*3)       // text width byte (=240)
 #define TEXTSIZE (TEXTWB*TEXTH) // text box size in bytes (=9600)
 
+// color pallet
+#define NCOLOR_PAL 24
+extern u8 rpterm_pallet[NCOLOR_PAL];
+
 // Terminal mode of operation
 typedef enum { ONLINE, CONFIG, LOCAL } TERM_MODE;
 extern TERM_MODE term_mode;

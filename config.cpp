@@ -33,9 +33,6 @@
 static u8 color_cfg_chr = COL_WHITE;
 static u8 color_cfg_bkg = COL_SEMIGREEN;
 
-// indexes of current serial configuration
-static int baud, fmt;
-
 // config field definition
 typedef enum { FLD_BOOL, FLD_OPT, FLD_COLOR } FLD_TYPE;
 typedef struct {
@@ -49,8 +46,13 @@ typedef struct {
 
 // options for the fields
 static const char *opt_baud[] = { "9600  ", "19200 ", "38400 ", "57600 ", "115200", NULL };
+static const uint baud_value[] = { 9600, 19200, 38400, 57600, 115200 };
 static const char *opt_fmt[] = { "7E1", "7O1", "8N1", NULL };
-static const char *opt_yn[] = { "YES", "NO ", NULL };
+static const SERIAL_FMT fmt_value[] = { FMT_7E1, FMT_7O1, FMT_8N1 };
+static const char *opt_yn[] = { "NO ", "YES", NULL };
+
+// indexes of current serial configuration
+static int baud = 4, fmt = 2;
 
 // config screen fields
 static FLD_DEF fields[] = {
@@ -71,6 +73,9 @@ static FLD_DEF fields[] = {
 // current field
 static uint curfield;
 
+// flag for config change
+static bool changed;
+
 // Local rotines
 static void config_write(int l, int c, const char *str);
 static void config_write_atr(int l, int c, const char *str, uint8_t clr_bkg, uint8_t clr_chr);
@@ -78,11 +83,12 @@ static void draw_box(int l, int c, int nl, int nc);
 static void label_field(FLD_DEF *fld);
 static void update_field(FLD_DEF *fld, bool selected);
 
-// Enter local configuration mode
+// Enter configuration mode
 void config_enter() {
     cls(color_cfg_bkg, color_cfg_chr);
     config_write(0, 0, "TERMINAL CONFIGURATION (ESC to exit)");
     curfield = 0;
+    changed = false;
     // draw boxes
     draw_box(1, 0, 5, TEXTW);
     draw_box(6, 0, 8, TEXTW);
@@ -95,6 +101,18 @@ void config_enter() {
     for (uint ifld = 0; ifld < NFIELDS; ifld++) {
         label_field(&fields[ifld]);
         update_field(&fields[ifld], ifld == curfield);
+    }
+}
+
+// Leave configuration mode
+void config_leave() {
+    cls();
+    home();
+    show_cursor();
+    init_sl();
+    if (changed) {
+        // reconfigure serial
+        serial_config(baud_value[baud], fmt_value[fmt]);
     }
 }
 
@@ -228,12 +246,14 @@ void config_key(u8 key){
                     }
                     *((int *) fld->value) = opc;
                     update_field(fld, true);
+                    changed = true;
                 }  else if (key == '-') {
                     if (opc-- == 0) {
                         opc = nopc-1;
                     }
                     *((int *) fld->value) = opc;
                     update_field(fld, true);
+                    changed = true;
                 }
             }
             break;
@@ -241,17 +261,33 @@ void config_key(u8 key){
                 if ((key == '+') || (key == '-') || (key == ' ')) {
                     *(bool *)fld->value = !(*(bool *)fld->value);
                     update_field(fld, true);
+                    changed = true;
                 }
             }
             break;
             case FLD_COLOR: {
                 uint8_t color = *((uint8_t *) fld->value);
-                if (key == '+') {
-                    *((uint8_t *) fld->value) = color + 1;
+                uint idx_color = 0;
+                for (uint i = 0; i < NCOLOR_PAL; i++) {
+                    if (color == rpterm_pallet[i]) {
+                        idx_color = i;
+                        break;
+                    }
+                }
+                if ((key == '+') || (key == ' ')) {
+                    if (++idx_color == NCOLOR_PAL) {
+                        idx_color = 0;
+                    }
+                    *((uint8_t *) fld->value) = rpterm_pallet[idx_color];
                     update_field(fld, true);
+                    changed = true;
                 }  else if (key == '-') {
-                    *((uint8_t *) fld->value) = color - 1;
+                    if (idx_color-- == 0) {
+                        idx_color = NCOLOR_PAL - 1;
+                    }
+                    *((uint8_t *) fld->value) = rpterm_pallet[idx_color];
                     update_field(fld, true);
+                    changed = true;
                 }
             }
             break;
@@ -259,3 +295,14 @@ void config_key(u8 key){
     }
 }
 
+const char *config_getbaud() {
+    return opt_baud[baud];
+}
+
+uint config_getbaudrate() {
+    return baud_value[baud];
+}
+
+SERIAL_FMT config_getfmt() {
+    return fmt_value[fmt];
+}

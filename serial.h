@@ -23,8 +23,6 @@
 
 typedef enum { FMT_8N1 = 0, FMT_7E1 = 1, FMT_7O1 = 2 } SERIAL_FMT;
 
-extern uint serial_baud;
-
 extern bool has_rx(void);
 extern void put_rx(uint8_t ch);
 extern uint8_t get_rx(void);

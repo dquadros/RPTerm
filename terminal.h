@@ -52,6 +52,9 @@ extern void receive_key(uint8_t ch);
 extern void cls(void);
 extern void cls(u8 clr_bkg, u8 clr_chr);
 extern void home(void);
+extern void show_cursor(void);
+
+extern void init_sl(void);
 extern void update_sl_mode();
 
 #endif

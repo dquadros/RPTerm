@@ -9,12 +9,12 @@
 [x] Status LED
 [x] Status line
 [x] Local mode: expand key and put in rx buffer
-[ ] Config mode
-    - Serial [ ] baud [ ] format
-    - Emulation [ ] autowrap [ ] CR = CR LF  [ ] LF = CR LF [ ] BS erases
-    - Screen Colors [ ] bkg [ ] chr 
-    - Status Line Colors [ ] bkg [ ] chr 
-    - Status Line [ ] ON/OFF
+[.] Config mode
+    - Serial [.] baud [.] format
+    - Emulation [.] autowrap [.] CR = CR LF  [.] LF = CR LF [.] BS erases
+    - Screen Colors [.] bkg [.] chr 
+    - Status Line Colors [.] bkg [.] chr 
+    - Status Line [.]
 
     CONFIGURATION (ESC to exit)
     +----------

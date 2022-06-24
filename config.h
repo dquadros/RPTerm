@@ -19,6 +19,11 @@
 #define _CONFIG_H
 
 extern void config_enter(void);
+extern void config_leave(void);
 extern void config_key(u8 key);
+
+extern const char *config_getbaud(void);
+extern uint config_getbaudrate(void);
+extern SERIAL_FMT config_getfmt(void);
 
 #endif

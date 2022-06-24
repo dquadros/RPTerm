@@ -51,7 +51,7 @@ u8 color_chr = COL_WHITE;
 u8 color_bkg = COL_SEMIBLUE;
 u8 color_sl_chr = COL_WHITE;
 u8 color_sl_bkg = COL_BLUE;
-bool autowrap, bserases, cr_crlf, lf_crlf;
+bool autowrap = true, bserases = false, cr_crlf = false, lf_crlf = false;
 bool show_sl = true;
 
 // color available to ANSI commands
@@ -98,7 +98,8 @@ static int nlines = ROWS-1;
 
 // local rotines
 static void print_string(char *str);
-static void init_sl(void);
+static void advance_line(void);
+static void scroll_up(int n);
 static void update_sl_lc(void);
 static void write_sl(int col, const char *str);
 
@@ -145,6 +146,16 @@ void receive_key  (uint8_t ch)
 // Move cursor to home
 void home() {
     csr.x = csr.y = 0;
+}
+
+// Move cursor to next line
+// scroll up if at last line
+static void advance_line() {
+    if (csr.y < (ROWS-1)) {
+        csr.y++;
+    } else {
+        scroll_up(1);
+    }
 }
 
 // Clear screen
@@ -283,7 +294,7 @@ static unsigned char get_character(int x,int y){
     return *p;
 }
 
-// Scroll screen n lines
+// Scroll up screen n lines
 // TODO: change rendering to use linAddr and just move pointers
 static void scroll_up(int n) {
     int size = n*3*COLUMNS;
@@ -296,7 +307,7 @@ static void scroll_up(int n) {
 }
 
 // Show cursor (if visible)
-static void show_cursor(){
+void show_cursor(){
     // save character under the cursor
     chr_under_csr = get_character(csr.x,csr.y);
 
@@ -507,9 +518,7 @@ void terminal_init(){
     // Init screen and emulation state
     cls();
     home();
-    if (show_sl) {
-        init_sl();
-    }
+    init_sl();
     reset_escape_sequence();
 
     // Show cursor
@@ -517,22 +526,24 @@ void terminal_init(){
     show_cursor();
 }
 
-static char ident[] = "RPTerm v0.5  DQ";
+static char ident[] = "RPTerm v0.6  DQ";
 
 // Initialize status line
-static void init_sl() {
-    // clear status line
-	for (int i = TEXTSIZE - 3*COLUMNS; i < TEXTSIZE; ) {
-		TextBuf[i++] = ' ';
-		TextBuf[i++] = color_sl_bkg;
-    	TextBuf[i++] = color_sl_chr;
-	}
+void init_sl() {
+    if (show_sl) {
+        // clear status line
+        for (int i = TEXTSIZE - 3*COLUMNS; i < TEXTSIZE; ) {
+            TextBuf[i++] = ' ';
+            TextBuf[i++] = color_sl_bkg;
+            TextBuf[i++] = color_sl_chr;
+        }
 
-    // fill the fields
-    update_sl_mode();
-    write_sl(SL_BAUD, "9600");      // TODO: config
-    write_sl(SL_ID, ident);
-    update_sl_lc();
+        // fill the fields
+        update_sl_mode();
+        write_sl(SL_BAUD, config_getbaud());
+        write_sl(SL_ID, ident);
+        update_sl_lc();
+    }
 }
 
 // update terminal mode in status line
@@ -618,12 +629,11 @@ void terminal_handle_rx(u8 chrx) {
             // regular characters
             slip_character(chrx,csr.x,csr.y);
             // advance cursor
-            if (++csr.x >= COLUMNS) {
+            if (csr.x < (COLUMNS-1)) {
+                csr.x++;
+            } else if (autowrap) {
                 csr.x=0;
-                if (++csr.y == ROWS) {
-                    csr.y--;    // stay in last line
-                    scroll_up(1);
-                }
+                advance_line();
             }
         }
         else if (chrx == ESC) {
@@ -639,20 +649,26 @@ void terminal_handle_rx(u8 chrx) {
                     if(csr.x > 0) {
                         csr.x--;
                     }
+                    if (bserases) {
+                        slip_character(' ', csr.x, csr.y);
+                    }
                     break; 
                 case HT:
                     if (csr.x < (COLUMNS-7)) {
                         csr.x = (csr.x + 8) & 0xF8;
                     }
                     break;
-                case LF:
-                    if (++csr.y == ROWS) {
-                        csr.y--;    // stay in last line
-                        scroll_up(1);
-                    }
-                    break; 
                 case CR:
                     csr.x = 0;
+                    if (cr_crlf) {
+                        advance_line();
+                    }
+                    break; 
+                case LF:
+                    if (lf_crlf) {
+                        csr.x = 0;
+                    }
+                    advance_line();
                     break; 
                 case FF:
                     cls(); 

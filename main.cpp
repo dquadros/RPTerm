@@ -27,6 +27,19 @@ u8 TextBuf[TEXTSIZE] __attribute__ ((aligned(4)));
 // copy of font
 static u8 Font_Copy[sizeof(FONT)] __attribute__ ((aligned(4)));
 
+// color pallet
+u8 rpterm_pallet[NCOLOR_PAL] =
+{
+  COL_BLACK, COL_GRAY2, COL_GRAY3,
+  COL_DARKBLUE, COL_SEMIBLUE, COL_BLUE,
+  COL_DARKGREEN, COL_SEMIGREEN, COL_GREEN,
+  COL_DARKCYAN, COL_SEMICYAN, COL_CYAN,
+  COL_DARKRED, COL_SEMIRED, COL_RED,
+  COL_DARKMAGENTA, COL_SEMIMAGENTA, COL_MAGENTA,
+  COL_DARKYELLOW, COL_SEMIYELLOW, COL_YELLOW,
+  COL_GRAY5, COL_GRAY6, COL_WHITE
+};
+
 // Terminal mode of operation
 TERM_MODE term_mode = ONLINE;
 
@@ -197,8 +210,7 @@ static void kbd_task() {
 		case CONFIG:
 			if (key == ESC) {
 				term_mode = ONLINE;
-				update_sl_mode();
-				cls();
+				config_leave();
 			} else {
 				config_key (key);
 			}

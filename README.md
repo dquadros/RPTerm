@@ -10,8 +10,8 @@ RPTerm will implement a serial terminal with the following features planed:
 * Serial communication with UART on GPIO 12 & 13 (configurable baud rate)
 * Support for VT-100 style commands
 * Generates VT-100 style sequences for cursor keys
-* Status Line (WIP)
-* Configuration screen (WIP)
+* Status Line
+* Configuration screen
 * SD Card interface, with send & receive files (TODO)
 
 ## Terminal Commands
@@ -90,13 +90,11 @@ The following ALT letter combinations are used for local functions:
 
 ## Configuration Screen
 
-*Work in Progress*
-
 The configuration screen is entered by typing ALT C and left by typing ESC.
 
 To navigate between fields, use the up and down arrows.
 
-To change a field, use space or + to change to the next value and - the previous value.
+To change a field, use space or + to change to the next value and - to change to the previous value.
 
 ## Credits
 
@@ -111,8 +109,8 @@ Key sequences based on propeller-vt100 (https://github.com/maccasoft/propeller-v
 
 ## Software Development
 
-The software was developed under Windows, with the standard Raspberry Pi Pico C/C++ SDK v1.3.0. 
-tinyusb should v0.13.0. 
+The software was developed under Windows, with the standard Raspberry Pi Pico C/C++ SDK v1.3.0, with tinyusb v0.13.0. 
+
 It should compile under other operating systems supported by the SDK.
 
 ## Hardware
@@ -120,12 +118,14 @@ It should compile under other operating systems supported by the SDK.
 Testing was done with a RP2040-Zero, but it should not be hard to get it to work on other RP2040 boards with the following pins available:
 
 * Eight contiguous GPIOs (I am using GP0 to GP7)
-* One GPIO for Composite Sync (I am usong GP8)
+* One GPIO for Composite Sync (I am using GP8)
 * One GPIO for the buzzer (if you want to support the BEL control code, I am using GP29)
 * One GPIO for a status LED (optional, I am using GP11)
 * UART pins (I am using UART0 at GPIO 12 & 13)
 
 Hardware configuration is at the hwconfig.h file. The hardware directory has details for a few boards.
+
+*Hardware will slightly change in the next version to include SD Card support.* Probably GPIO8 to GPIO11 (SPI1) will be used to connect the SD Card, so Composite Sync will be moved over to GPIO27 and the LED to GPIO28.
 
 ## Status LED
 
@@ -135,7 +135,7 @@ The (optional) status LED blinks to indicate that the firmware is executing. It 
 
 ## What's done and what's missing
 
-This is (and will be for a long time) a work in progress.
+This is (and will be for some time) a work in progress.
 
 The basics are in place: vga, serial and keyboard support. 
 Basic terminal emulation is working. I'm still revising/rewriting it and it needs a lot of testing.
@@ -143,6 +143,6 @@ Basic terminal emulation is working. I'm still revising/rewriting it and it need
 Scrolling the screen is done by brute force. Having a table with line address will speed it up, but requires
 changing assembly code in pico_vga (and hoping I will not mess up the timing).
 
-The configuration screen is under construction.
+The configuration screen is working, but config is not saved yet.
 
 Hardware will be update to include a SD card socket. Config will be stored in the SD card. Special keys will be used to send and receive text files from the SD.
