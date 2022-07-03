@@ -612,6 +612,7 @@ void VgaPioInit()
 
 	// connect PIO to the pad
 	for (i = VGA_GPIO_FIRST; i <= VGA_GPIO_LAST; i++) pio_gpio_init(VGA_PIO, i);
+	pio_gpio_init(VGA_PIO, VGA_GPIO_SYNC);
 
 	// negative HSYNC output
 	if (!CurVmode.psync) gpio_set_outover(VGA_GPIO_SYNC, GPIO_OVERRIDE_INVERT);
@@ -623,7 +624,8 @@ void VgaPioInit()
 		if ((layer > 0) && (LayerModeInx[layer] == LAYERMODE_BASE)) continue;
 
 		// set pin direction to output
-		pio_sm_set_consecutive_pindirs(VGA_PIO, VGA_SM(layer), VGA_GPIO_FIRST, VGA_GPIO_NUM, true);
+		pio_sm_set_consecutive_pindirs(VGA_PIO, VGA_SM(layer), VGA_GPIO_FIRST, VGA_GPIO_OUTNUM, true);
+		pio_sm_set_consecutive_pindirs(VGA_PIO, VGA_SM(layer), VGA_GPIO_SYNC, 1, true);
 
 		// get default config
 		pio_sm_config cfg = pio_get_default_sm_config();

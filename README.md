@@ -118,14 +118,18 @@ It should compile under other operating systems supported by the SDK.
 Testing was done with a RP2040-Zero, but it should not be hard to get it to work on other RP2040 boards with the following pins available:
 
 * Eight contiguous GPIOs (I am using GP0 to GP7)
-* One GPIO for Composite Sync (I am using GP8)
+* One GPIO for Composite Sync (since v0.7 I am using GP27)
 * One GPIO for the buzzer (if you want to support the BEL control code, I am using GP29)
-* One GPIO for a status LED (optional, I am using GP11)
+* One GPIO for a status LED (optional, since v0.7 I am using GP28)
 * UART pins (I am using UART0 at GPIO 12 & 13)
+* SPI pins for SD Card (I am using GPIO8 to GPIO11, SPI1) 
 
 Hardware configuration is at the hwconfig.h file. The hardware directory has details for a few boards.
 
-*Hardware will slightly change in the next version to include SD Card support.* Probably GPIO8 to GPIO11 (SPI1) will be used to connect the SD Card, so Composite Sync will be moved over to GPIO27 and the LED to GPIO28.
+Hardware was slightly change in version 0.7 to include SD Card support:
+
+* Composite Sync was moved from GP8 to GPIO27 
+* LED was moved from GP11 to GPIO28.
 
 ## Status LED
 
@@ -145,4 +149,5 @@ changing assembly code in pico_vga (and hoping I will not mess up the timing).
 
 The configuration screen is working, but config is not saved yet.
 
-Hardware will be update to include a SD card socket. Config will be stored in the SD card. Special keys will be used to send and receive text files from the SD.
+Config will be stored in the SD card. Special keys will be used to send and receive text files from the SD.
+
