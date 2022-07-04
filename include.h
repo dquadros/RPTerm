@@ -42,3 +42,5 @@
 // configuraton
 #include "config.h"
 
+// video
+#include "video.h"

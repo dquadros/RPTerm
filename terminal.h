@@ -38,11 +38,8 @@
 #define CR          0x0d 
 #define FF          0x0c
 
-extern u8 *linAddr[TEXTH];
-
 extern u8 color_chr, color_bkg, color_sl_chr, color_sl_bkg;
 extern bool autowrap, bserases, cr_crlf, lf_crlf;
-extern bool show_sl;
 
 extern void terminal_init(void);
 extern void terminal_handle_rx(u8 chrx);
@@ -50,9 +47,6 @@ extern void send_key(uint8_t ch);
 extern void receive_key(uint8_t ch);
 
 extern void cls(void);
-extern void cls(u8 clr_bkg, u8 clr_chr);
-extern void home(void);
-extern void show_cursor(void);
 
 extern void init_sl(void);
 extern void update_sl_mode();

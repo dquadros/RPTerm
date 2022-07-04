@@ -25,10 +25,6 @@
 #define COLUMNS     TEXTW
 #define ROWS        TEXTH
 
-// The screen
-extern u8 TextBuf[TEXTSIZE];
-u8 *linAddr[ROWS];
-
 // escape sequence state
 #define ESC_READY               0
 #define ESC_ESC_RECEIVED        1
@@ -42,29 +38,19 @@ static int esc_parameter_count;
 static unsigned char esc_c1;
 static unsigned char esc_final_byte;
 
-// screen control
-static bool cursor_visible;
-static unsigned char chr_under_csr = 0xFF;
-
 // configurations
 u8 color_chr = COL_WHITE;
 u8 color_bkg = COL_SEMIBLUE;
 u8 color_sl_chr = COL_WHITE;
 u8 color_sl_bkg = COL_BLUE;
 bool autowrap = true, bserases = false, cr_crlf = false, lf_crlf = false;
-bool show_sl = true;
 
 // color available to ANSI commands
 static const u8 ansi_pallet[] = {
     COL_BLACK, COL_RED, COL_GREEN, COL_YELLOW, COL_BLUE, COL_MAGENTA, COL_CYAN, COL_WHITE
 };
 
-// Cursor
-typedef struct scrpos {
-  int x;
-  int y;
-} scrpos;
-struct scrpos csr = {0,0};
+// Saved cursor
 struct scrpos saved_csr = {0,0};
 
 // Special keys sequences
@@ -98,10 +84,7 @@ static int nlines = ROWS-1;
 
 // local rotines
 static void print_string(char *str);
-static void advance_line(void);
-static void scroll_up(int n);
 static void update_sl_lc(void);
-static void write_sl(int col, const char *str);
 
 // Send a key, expanding sequences
 void send_key (uint8_t ch)
@@ -143,104 +126,6 @@ void receive_key  (uint8_t ch)
   }
 }
 
-// Move cursor to home
-void home() {
-    csr.x = csr.y = 0;
-}
-
-// Move cursor to next line
-// scroll up if at last line
-static void advance_line() {
-    if (csr.y < (ROWS-1)) {
-        csr.y++;
-    } else {
-        scroll_up(1);
-    }
-}
-
-// Clear screen
-void cls() {
-    cls(color_bkg, color_chr);
-}
-
-void cls(u8 clr_bkg, u8 clr_chr) {
-    int end = TEXTSIZE;
-    if (show_sl) {
-        end -= 3* COLUMNS;
-    }
-	for (int i = 0; i < end; ) {
-		TextBuf[i++] = ' ';
-		TextBuf[i++] = clr_bkg;
-    	TextBuf[i++] = clr_chr;
-	}
-}
-
-// clear line from cursor to end of line
-static void clear_line_from_cursor(){
-    u8* p= linAddr[csr.y] + 3* csr.x;
-    for (int i = csr.x; i < COLUMNS; i++) {
-		*p++ = ' ';
-		*p++ = color_bkg;
-    	*p++ = color_chr;
-    }
-}
-
-// clear line from start of line to cursor
-static void clear_line_to_cursor(){
-    u8* p= linAddr[csr.y];
-    for (int i = 0; i <= csr.x; i++) {
-		*p++ = ' ';
-		*p++ = color_bkg;
-    	*p++ = color_chr;
-    }
-}
-
-// clear line
-static void clear_entire_line(){
-    u8* p= linAddr[csr.y];
-    for (int i = 0; i < COLUMNS; i++) {
-		*p++ = ' ';
-		*p++ = color_bkg;
-    	*p++ = color_chr;
-    }
-}
-
-// clear screen from cursor to end of screen
-static void clear_screen_from_csr(){
-    int l = csr.y;
-    while (l < nlines) {
-        int start = (l == csr.y)? csr.x : 0;
-        u8 *p = linAddr[l] + 3*start;
-        for (int c = start; c < COLUMNS; c++) {
-            *p++ = ' ';
-            *p++ = color_bkg;
-            *p++ = color_chr;
-        }
-        l++;
-    }
-}
-
-// clear screen from start of screen to cursor
-static void clear_screen_to_csr(){
-    int l = 0;
-    while (l <= csr.y) {
-        int end = (l == csr.y)? csr.x+1 : COLUMNS;
-        u8 *p = linAddr[l];
-        for (int c = 0; c < end; c++) {
-            *p++ = ' ';
-            *p++ = color_bkg;
-            *p++ = color_chr;
-        }
-        l++;
-    }
-}
-
-
-// Cursor control
-static void make_cursor_visible(bool v){
-    cursor_visible = v;
-}
-
 // Clear escape sequence parameters
 static void clear_escape_parameters(){
     for(int i=0; i<MAX_ESC_PARAMS; i++){
@@ -256,75 +141,6 @@ static void reset_escape_sequence(){
     esc_c1 = 0;
     esc_final_byte = 0;
     parameter_q = false;
-}
-
-// Check that cursor in valid
-static void constrain_cursor_values(){
-    if (csr.x < 0) {
-        csr.x = 0;
-    }
-    if (csr.x >= COLUMNS) {
-        csr.x = COLUMNS-1;
-    }
-    if (csr.y < 0) {
-        csr.y=0;
-    }
-    if (csr.y >= nlines) {
-        csr.y = nlines-1;
-    }
-}
-
-// Put char in the screen memory, taking in account the color
-static void slip_character(unsigned char ch,int x,int y){
-    u8 *p = linAddr[y]+3*x;
-    *p++ = ch;
-    *p++ = color_bkg;
-    *p++ = color_chr;
-}
-
-// Put char in screen memory, without changing color
-static void put_character(unsigned char ch,int x,int y){
-    u8 *p = linAddr[y]+3*x;
-    *p = ch;
-}
-
-// Get char from screen
-static unsigned char get_character(int x,int y){
-    u8 *p = linAddr[y]+3*x;
-    return *p;
-}
-
-// Scroll up screen n lines
-// TODO: change rendering to use linAddr and just move pointers
-static void scroll_up(int n) {
-    int size = n*3*COLUMNS;
-    memmove (TextBuf, TextBuf+size, TEXTSIZE-size);
-    for (int i = TEXTSIZE - size; i < TEXTSIZE; ) {
-		TextBuf[i++] = ' ';
-		TextBuf[i++] = color_bkg;
-		TextBuf[i++] = color_chr;
-    }
-}
-
-// Show cursor (if visible)
-void show_cursor(){
-    // save character under the cursor
-    chr_under_csr = get_character(csr.x,csr.y);
-
-    // nothing to do if cursor is invisible
-    if(!cursor_visible) {
-        return;
-    }
-
-    put_character('_',csr.x,csr.y);
-}
-
-// Restore the character under the cursor
-// (if it was saved)
-static void clear_cursor(){
-    if (chr_under_csr != 0xFF) {
-        put_character(chr_under_csr,csr.x,csr.y);
-    }
 }
 
 // Treat ESC sequence received
@@ -508,17 +324,9 @@ static void esc_sequence_received(){
 // Terminal emulation initialization
 void terminal_init(){
 
-    // Calcule starting address for the lines
-    u8 *p = TextBuf;
-    for (int i = 0; i < ROWS; i++) {
-        linAddr[i] =  p;
-        p += TEXTWB;
-    }
-
     // Init screen and emulation state
-    cls();
-    home();
-    init_sl();
+    show_statusline(true);
+    video_init();
     reset_escape_sequence();
 
     // Show cursor
@@ -532,11 +340,7 @@ static char ident[] = "RPTerm v0.7  DQ";
 void init_sl() {
     if (show_sl) {
         // clear status line
-        for (int i = TEXTSIZE - 3*COLUMNS; i < TEXTSIZE; ) {
-            TextBuf[i++] = ' ';
-            TextBuf[i++] = color_sl_bkg;
-            TextBuf[i++] = color_sl_chr;
-        }
+        clear_sl();
 
         // fill the fields
         update_sl_mode();
@@ -571,16 +375,6 @@ static void update_sl_lc() {
         write_sl(SL_LC, buf);
     }
 }
-
-// Write string to status line
-static void write_sl (int col, const char *str) {
-    uint8_t *pos = linAddr[nlines] + 3*col;
-    for(int i=0; str[i] != '\0'; i++){
-        *pos = str[i];
-        pos += 3;
-    }
-}
-
 
 // Aux rotine to print a message
 static void print_string(char *str){
@@ -627,7 +421,7 @@ void terminal_handle_rx(u8 chrx) {
     if (esc_state == ESC_READY) {
         if ((chrx >= 0x20) && (chrx < 0x7f)) {  
             // regular characters
-            slip_character(chrx,csr.x,csr.y);
+            slip_character(chrx);
             // advance cursor
             if (csr.x < (COLUMNS-1)) {
                 csr.x++;
@@ -650,7 +444,7 @@ void terminal_handle_rx(u8 chrx) {
                         csr.x--;
                     }
                     if (bserases) {
-                        slip_character(' ', csr.x, csr.y);
+                        slip_character(' ');
                     }
                     break; 
                 case HT:

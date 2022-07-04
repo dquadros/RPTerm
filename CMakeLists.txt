@@ -31,6 +31,7 @@ add_executable(rpterm
                terminal.cpp
                keybd.cpp
                config.cpp
+               video.cpp
 
                ${CMAKE_CURRENT_LIST_DIR}/_picovga/render/vga_atext.S
                ${CMAKE_CURRENT_LIST_DIR}/_picovga/render/vga_attrib8.S
