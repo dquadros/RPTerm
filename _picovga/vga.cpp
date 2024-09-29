@@ -56,7 +56,7 @@ hw_divider_state_t DividerState;
 int __not_in_flash_func(VgaBufProcess)()
 {
 	// Clear the interrupt request for DMA control channel
-	dma_hw->ints0 = (1u << VGA_DMA_PIO0);
+	dma_channel_acknowledge_irq0(VGA_DMA_PIO0);
 
 	// switch current buffer index
 	//   BufInx = 0 running CtrlBuf1 and preparing CtrlBuf2, BufInx = 1 running CtrlBuf2 and preparing CtrlBuf1
@@ -586,6 +586,7 @@ void VgaPioInit()
 	
 	// load main program into PIO's instruction memory
 	struct pio_program prg;
+	memcpy(&prg, &vga_program, sizeof(vga_program));	// copy *all* fields; SDK v2 introduced pio_version
 	prg.instructions = ins;
 	prg.length = vga_program.length;
 	prg.origin = BASE_OFFSET;
@@ -960,14 +961,10 @@ void VgaInit(const sVmode* vmode)
 	memcpy(&CurLayerMode[0], &LayerMode[LAYERMODE_BASE], sizeof(sLayerMode));
 	memset(&LayerScreen[0], 0, sizeof(sLayer));
 
-	// save layer modes
-	LayerModeInx[1] = vmode->mode[1];
-	LayerModeInx[2] = vmode->mode[2];
-	LayerModeInx[3] = vmode->mode[3];
-
 	LayerMask = B0; // mask of active layers
 	for (i = 1; i < LAYERS; i++)
 	{
+		LayerModeInx[i] = vmode->mode[i];
 		memcpy(&CurLayerMode[i], &LayerMode[LayerModeInx[i]], sizeof(sLayerMode));
 		if (LayerModeInx[i] != LAYERMODE_BASE) LayerMask |= (1 << i);
 	}

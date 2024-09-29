@@ -334,7 +334,7 @@ void terminal_init(){
     show_cursor();
 }
 
-static char ident[] = "RPTerm v0.7  DQ";
+static char ident[] = "RPTerm v0.8  DQ";
 
 // Initialize status line
 void init_sl() {

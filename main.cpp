@@ -113,6 +113,7 @@ void beep () {
 
 // Treats beeping
 static void beep_task() {
+	#ifdef BUZZER_PIN
 	if ((beep_state != NO_BEEP) && (board_millis() >= beep_end)) {
 		if (beep_state == BEEPING) {
 			// Finish beeping, wait before next beep
@@ -132,6 +133,7 @@ static void beep_task() {
 
 		}
 	}
+	#endif
 }
 
 // Init LED pin

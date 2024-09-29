@@ -109,7 +109,7 @@ Key sequences based on propeller-vt100 (https://github.com/maccasoft/propeller-v
 
 ## Software Development
 
-The software was developed under Windows, with the standard Raspberry Pi Pico C/C++ SDK v1.3.0, with tinyusb v0.13.0. 
+The software was developed under Windows, with the standard Raspberry Pi Pico C/C++ SDK v2.0.0, with tinyusb v0.16.0. 
 
 It should compile under other operating systems supported by the SDK.
 
@@ -126,7 +126,7 @@ Testing was done with a RP2040-Zero, but it should not be hard to get it to work
 
 Hardware configuration is at the hwconfig.h file. The hardware directory has details for a few boards.
 
-Hardware was slightly change in version 0.7 to include SD Card support:
+Hardware was slightly changed in version 0.7 to include SD Card support:
 
 * Composite Sync was moved from GP8 to GPIO27 
 * LED was moved from GP11 to GPIO28.

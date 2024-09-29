@@ -3,12 +3,12 @@ cmake_minimum_required(VERSION 3.14)
 
 include(pico_sdk_import.cmake)       
 
-pico_sdk_init()
-
 project(rpterm VERSION 1.0.0)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
+
+pico_sdk_init()
 
 add_compile_options(-Wall
     -Wno-format          

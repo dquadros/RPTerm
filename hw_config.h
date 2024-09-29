@@ -26,11 +26,14 @@
 #define UART_RX_PIN     13
 
 // BUZZER for Beep
-#define BUZZER_PIN      29      // undefine if no buzzer
-                                // change to 9 for the Pi Pico
+#define BUZZER_PIN      9      // undefine if no buzzer
+                                // 9 for the Pi Pico
+				// 29 for RP2040 Zero
 
 // Status LED
-#define STATUS_LED      11      // undefine if no LED
+#define STATUS_LED      25      // undefine if no LED
+				// 25 for Pi Pico
+				// 11 for RP2040 Zero
 
 // VGA
 // Look for VGA_GPIO in vga_config.h
